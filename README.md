@@ -136,7 +136,7 @@ Headache: In certain situations, headaches or migraines may occur after a seizur
 Sleep disturbances can result from seizures, which can interfere with regular sleep cycles.
 Grand mal seizures, also referred to as tonic-clonic movements, are typified by jerky movements that are followed by a stiffening of the muscles.
 
-## 7. Breif Description of Epilesy
+## 7. Brief Description of Epilesy
 
 - A brain-related neurological disorder called epilepsy increases a person's risk of experiencing frequent , spontaneous seizures. It is one of the most widespread 
 ner vous system disorders, affecting individuals of all ages, races, and ethnicities.
