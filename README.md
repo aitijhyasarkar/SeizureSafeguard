@@ -41,7 +41,7 @@ Prof. Arnab Chakraborty
 - [14. Future Scope of Our Project](#14-future-scope-of-our-project)
 - [15. Conclusion](#15-conclusion)
 
-## 1. Abstruct   
+## 1. Abstract   
 
 This project aims to develop a wearable device that can detect seizures in epileptic patients through the real-time analysis of patient parameters such as EEG, heart rate, temperature,  and  involuntary  jerking  motions.  The  physiological  data  will  be continuously  monitored  and  recorded  using  sensors  embedded  in  a  wristband. Collected data will then be analysed using machine learning algorithms to detect abnormal patterns indicating the onset of a seizure. Once a seizure is detected, the device will alert caregivers or medical professionals on a connected mobile app. This project is expected to significantly improve the quality of life for epileptic patients by providing timely and accurate detection of seizures, allowing for prompt medical intervention. A log will be maintained enabling healthcare professionals to monitor patient progress and adjust treatment plans accordingly. The use of IoT technology in this project represents a promising advancement in the field of healthcare and has the potential to greatly benefit patients with epilepsy.
 
