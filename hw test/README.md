@@ -17,4 +17,6 @@ The `Dino.py` script lets you play the Chrome Dinosaur Game using Python.
 3. cd "hw test"
 3. Flash the EOG.ino to your development board
 4. Run the py script
-   ```py Dino.py
+   ```
+   py Dino.py
+   ```
