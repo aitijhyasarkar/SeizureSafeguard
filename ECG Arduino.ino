@@ -1,5 +1,5 @@
 #define SAMPLE_RATE 60 //Define the sampling rate for reading the ECG signal
-#define BAUD_RATE  //Define the baud rate for serial communication
+#define BAUD_RATE 115200 //Define the baud rate for serial communication
 #define INPUT_PIN 4 //Define the input pin for the ECG signal
 
 //Setup function to initialize pin modes and start serial communication
