@@ -43,6 +43,7 @@ def calculate_bpm(peaks, sample_rate):
     bpm = 60 / avg_interval
     return bpm
 
+#Driver function
 def main():
     ecg_signal = []
     bpm_values = []  # Initialize the bpm_values list here
@@ -79,7 +80,6 @@ def main():
                 if len(bpm_values) > window_size:
                     bpm_values = bpm_values[-window_size:]
                 avg_bpm = np.mean(bpm_values)
-
                 current_time = time.time()
                 if current_time - last_update_time >= 2:
                     print(f"Average BPM (last {BPM_WINDOW} seconds): {avg_bpm:.2f}")
@@ -87,7 +87,6 @@ def main():
                     client.publish('v1/devices/me/telemetry', json.dumps(payload))
                     print(f"Publishing message: {payload}")
                     last_update_time = current_time
-
                 xdata = np.linspace(max(0, len(ecg_signal) / sample_rate - 5), len(ecg_signal) / sample_rate, len(ecg_signal))
                 ydata = ecg_signal[-len(xdata):]
                 line.set_data(xdata, ydata)
@@ -98,11 +97,9 @@ def main():
                 pass
 
         return line,
-
     ani = FuncAnimation(fig, update, init_func=init, blit=True, interval=1000 // (sample_rate * 2))
     plt.show() # Show the plot
     ser.close() # Close the serial port
     client.disconnect() # Disconnect from ThingsBoard
-
 if __name__ == "__main__":
     main()
