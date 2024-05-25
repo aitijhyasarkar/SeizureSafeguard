@@ -1,0 +1,187 @@
+Comparison of patient non-specific seizure detection using multi-modal signals
+
+abstract
+Epilepsy is the neurological disorder affecting around 50 million people worldwide. It is characterized by recurrent and unpredictable seizures. Correctly counting seizure occurrences is crucial for diagnosis and treatment of epilepsy, which will lower the risk of SUDEP (sudden unexpected deaths in epilepsy). Many previous researches on patient-specific seizure detection have obtained a good performance but with limited practicability in clinical setting. On the other hand, patient non-specific detection is clinically practicable but with limited performance. This study aims to improve the performance of patient non- specific seizure detection by comparing performances among one modality based models and multi- modal based model. The study was based on clinical data from the open source Siena Scalp EEG Database, which consist of simultaneous EEG (Electroenchephalography) and ECG (electrocardiography) recording from 14 patients with focal epilepsy. The seizures were annotated by an epilepsy expert after a careful review of the clinical and EEG data of each patient. First, relevant signal pre-processing were performed, followed by features extraction. Then, machine learning approach based on random forest was employed for seizure detection with leave-one-patient-out cross validation scheme. EEG detector and ECG detector were separately trained with each signal. Multi-modal detector was based on combining EEG detector and ECG detector by the late integration approach with the Boolean operation “OR” strategy. The performances were compared among those three detectors and with the state of the art. The result has shown that the multi-modal detector achieved a sensitivity of 87.62% and outperformed the ECG detector (41.55%), the EEG detector (81.43%), and the state-of-the-art non-specific detectors. Notably, the ECG detector detected some seizures which EEG detector failed to detect. This indicated that the ECG signal was beneficial for increasing sensitivity. However, due to the “OR” fusion strategy, the multi- modal detector also inherited the false detections resulted from either EEG detector or ECG detector. The findings of the study demonstrate the potential of improving performance of patient non-specific seizure detection by multimodal data. It shows that the proposed method should be further validated on large database and further development should focus on lowering false detections before clinical application.
+
+1. Introduction
+Epilepsy is a neurological disorder affecting around 50 million people worldwide [1]. It is characterized by recurrent and unpre- dictable seizures, which can affect different parts of the brain and manifest itself by loss of consciousness, sudden changes in behav- ior, sensation and cognition, and convulsions. There is one case of sudden unexpected deaths in epilepsy (SUDEP) among 1000 pa- tients each year. The cause of SUDEP is not fully understood, but it is believed that uncontrolled or frequent seizures will increase the
+* Corresponding author.
+E-mail address: yingu@dtu.dk (Y. Gu).
+risk of SUDEP [2]. Therefore, an automatic and accurate detection of seizures is essential for effective management of the condition.
+EEG (Electroencephalography) is non-invasive recording of brain electrical activities. With its high temporal resolution, EEG is a valuable tool in the diagnosis and management of various neu- rological conditions, as well as in basic research and applied neu- roscience [3–8]. Currently, the diagnosis and treatment of epilepsy is based on the visual inspection of the long-term EEG signal by a trained clinician. The epileptic EEG is interpreted by its com- plicated spectral, temporal, and spatial features. Visual inspection of EEG is subjective, time-consuming, and can be prone to hu- man error [9]. To overcome these limitations, various automatic seizure detection algorithms have been developed over several decades [10–13]. It typically involves features extraction and ma- chine learning based classification. The features reflecting charac-
+ https://doi.org/10.1016/j.neuri.2023.100152
+2772-5286/© 2023 The Authors. Published by Elsevier Masson SAS. This is an open access article under the CC BY-NC-ND license (http:// creativecommons.org/licenses/by-nc-nd/4.0/).
+G.M. Sigsgaard and Y. Gu
+Neuroscience Informatics 4 (2024) 100152
+Table 1
+Patient Information from Siena Scalp EEG Database (PId: patient Id).
+ PId Age Sex
+PN00 55 M
+PN01 46 M
+PN03 54 M
+PN05 51 F
+PN06 36 M
+PN07 20 F
+PN09 27 F
+PN10 25 M
+PN11 58 F
+PN12 71 M
+PN13 34 F
+PN14 49 M
+PN16 41 F
+PN17 42 M
+Seizure
+Right Temporal lobe Focal onset impaired awareness
+Left Temporal lobe Focal onset impaired awareness
+Right Temporal lobe Focal onset impaired awareness
+Left Temporal lobe Focal onset impaired awareness
+Left Temporal lobe Focal onset impaired awareness
+Left Temporal lobe Focal onset impaired awareness
+Left Temporal lobe Focal onset impaired awareness Bilateral frontal lobe focal to bilateral tonic-clonic
+Right Temporal lobe Focal onset impaired awareness
+Left Temporal lobe Focal onset impaired awareness
+Left Temporal lobe Focal onset impaired awareness
+Left Temporal lobe Focal onset without impaired awareness Left Temporal lobe Focal onset impaired awareness
+Right Temporal lobe Focal onset impaired awareness
+Nr. of Seizure
+5 2 2 3 5 1 3 10 1 4 3 4 2 2
+Recording Time (m)
+192 809 1453 362 723 524 410 1122 145 366 520 1408 293 308
+  teristics of epileptic EEG have been extracted by various methods such as statistic descriptive of time domain, FFT, autoregressive modeling, cross-correlation of channels, phase synchronization, wavelet transform, entropy, spatial filtering and so on [14]. For classification, the studies have used machine learning method such as decision tree, K-nearest neighbor, random forest, support vector machine (SVM) and deep learning such as Convolutional Neural Network (CNN) [15], recurrent Neural Network (RNN) [16] or com- bination of CNN and RNN [17]. Generally, there are two different approaches for seizure detection, namely patient specific model and patient non-specific model. A patient specific model is per- sonalized and focuses on an individual patient, trained with their specific data. On the other hand, a patient non-specific model aims to identify patterns or trends within a group, providing general in- sights applicable to the group and can be directly used with new patients. The researches have found that patient specific algorithms outperformed the non-specific ones [11,12]. Many researchers have been devoted to patient specific model and achieved good per- formance. Daoud and Bayoumi [17] developed a patient specific model using CNN for extracting the significant spatial features from different scalp positions and RNN for expecting the incidence of seizures. They achieved a highest accuracy of 99.6% and lowest false alarm rate per hour of 0.004. An non-specific model proposed by Sridevi et al. [18] extracted signal energy, spectral energies in different frequency bands and spectral entropy. Among five clas- sifiers, they obtained the best performance of a sensitivity of 80% and a specificity of 86% with classifier based on SVM.
+Many studies on seizure detection have focused on using EEG signal. In recent years, there has been increasing interest in also using electrocardiography (ECG) signals for seizure detection [19]. The findings presented by Zijlmans et al. in [20] suggested that ECG changes occur during a seizure and sometimes even before the earliest EEG change. They reported that an increase of at least 10 beats/minute was found in 73% of all seizures (281) and ECG abnormalities could be seen in 26%. Greene et al. [21] considered both a patient specific and non-specific model using a combination of both EEG and ECG. They utilized a linear discriminant classifier. The multimodal detector used both an early integration approach and a late integration for information fusion from EEG and ECG. They scored a sensitivity and false positives per hour (FP/h) of 81.44% and 3.15 FP/h and 81.27% and 3.05 FP/h, respectively.
+Patient specific model achieved great performances for seizure detection. However, the patient specific models need to be trained for each patient before deployment, which limit their applicability. The patient non-specific models lack of good performance. It can explain that automatic seizure detection hasn’t been adopted sys- tematically in clinical setting yet. The ECG was found to increase performance in patient-specific seizure detectors [22], however, lit- tle research had gone into examining whether this could also be true for non-specific detectors. In this study, we aim to improve
+the performance of patient non-specific seizure detection by fus- ing data from both EEG and ECG in the way that two modalities will be complimentary to each other. The performance of multi- modal detector will be compared with two uni-modals trained for each signal. The developed multi-modal detector will aid the clinician for a subjective and efficient assessment of epilepsy. The main contributions of our work are summarized as follows. First, we proposed an efficient method to represent patients’ variabil- ity by extracting features from different domains for both EEG and ECG. Second, those EEG and ECG features server as input to ran- dom forest based classifier. Random selection of subset of large EEG and ECG features for training trees in forest will increase di- versity among trees and reduce over-fitting. Third, the study shows the advantage and disadvantage of combining ECG. In addition, the study demonstrates a practical way to balance sensitivity and false positives.
+
+
+2. Methodology
+2.1. Siena scalp EEG database
+In this project, the clinical data from the open access Siena Scalp EEG Database was used [23]. The data was acquired by the Unit of Neurology and Neurophysiology at the University of Siena. The database consists of simultaneous EEG and ECG recordings with a sampling rate of 512 Hz from 14 patients (nine males, five females) with focal epilepsy. Mean of age was 43.5 years old (range: 20–71). The EEG was recorded from 19 monopolar chan- nels (Fp1, F3, C3, P3, O1, F7, T3, T5, Fz, Cz, Pz, F4, C4, P4, O2, F8, T4, T6 and Fp2) according to international 10-20 system. Most of the recordings also contained 1 or 2 ECG signals. The annotation of seizure was carried out by an expert clinician after a careful review of the clinical and EEG data of each patient. In total, the database contains 47 seizures with a mean seizure duration of 61 seconds on approximately 144 hours of recording time. Table 1 shows the basic information about all patients.
+2.2. Multi-modal detector of seizure
+Seizure detection refers to identify epileptic EEG associated with seizure. It is a binary classification problem, aiming to clas- sify seizure versus non-seizure. The architecture of multi-modal seizure detector using both EEG and ECG is illustrated in Fig. 1. It consists two uni-modals (EEG detector and ECG detector) and fusion step. First, EEG detector and ECG detector were trained and evaluated separately with leave-one-patient-out cross valida- tion scheme. Then post-processing was carried out in the way that the detections within 30 seconds were grouped into one detection. Finally, a late integration approach was adopted for data fusion
+2
+G.M. Sigsgaard and Y. Gu Neuroscience Informatics 4 (2024) 100152
+ Fig. 1. Architecture of Multi-modal detector of seizure. D is the detector decision; Df is the decision after post-processing; DCombined is the decision after fusion.
+where the decisions from two detectors were combined into a final decision with Boolean operation of “OR”. The performance of EEG detector, ECG detector and multi-modal detector was measured by sensitivity, specificity, false positives per hour (FP/h), detection la- tency (DL) in seconds and the receiver operating characteristics curve (ROC) with variation. Sensitivity and specificity provide a quantitative indication of the model’s ability to correctly identify true positive and true negative cases, respectively. FP/h refers to the number of false positives that are generated by a test per hour. DL is difference between first detected seizure epoch and the onset time of seizure annotated by the clinician. It shows how early the model can detect the seizure. The ROC curve is created by plotting the true positive rate (TPR) against the false positive rate (FPR) at various threshold settings. It represents the trade-off between the TPR and FPR for different threshold values. In our study, the met- ric FP/h was used instead of FPR for plotting ROC curve [22], which give more concrete measure of false positives.
+The patient non-specific EEG detector has been developed in our previous study [24]. In the following, first EEG detector will be briefly described. Then the development of ECG detector will be explained in detail, followed by multi-modal fusion.
+2.2.1. EEG-detector
+The algorithm developed in [24] was used in this study for EEG detector. For reader’s convenience, we briefly introduce the algo- rithm here. For more details, please refer to [24]. The EEG signal first went through high-pass filtering at 0.5 Hz and a 50 Hz notch filtering. Then the signal was divided into 6-seconds epochs, from which features will be extracted [25]. Features from time domain, frequency domain and entropy were extracted from each channel and then concatenated into a feature vector. Epochs without fully overlapping with seizure period were labelled as non-seizure while with fully overlapping as seizure. For epochs labeled with seizure, there is 50% overlap in order to increase the number of seizure samples. Afterwards, random forest was applied for classification between seizure and non-seizure with leave-one-patient-out cross validation scheme. Finally, the performance was reported by sensi- tivity, specificity, FP/h, DL in seconds and ROC curve with variation.
+2.2.2. ECG-detector
+The architecture of ECG detector is illustrated in Fig. 2. It con- sists of pre-processing, feature extraction and classification. The following sections will provide a detailed description of each step. ECG Pre-processing To extract reliable features, 60-seconds epoch was chosen. It is the preferred window size in several studies us-
+ing ECG for automatic seizure detection [21,22]. The window was moved along the ECG signal extracting l = 1, ..., L epochs. The epochs overlapping with the seizure interval were labeled as 1 (seizure), otherwise as 0 (non-seizure). Additionally, as an attempt to obtain more seizure data, a 50% overlap was applied to seizure epochs. A representation of this is shown in Fig. 3.
+For the ECG model, the feature extraction part is based on an analysis of heart rate variability (HRV). To conduct such an anal- ysis, it is pivotal to detect the R-peaks of the signal. Here, we used one of the most famous QRS-detection algorithms, namely the Pan-Tompkins algorithm proposed in [26]. It has been applied by several studies for the purpose of analyzing HRV for seizure detection [22,27]. The code used to implement the algorithm can be found in [28]. The output of the Pan-Tompkins algorithm was all the R-peak time points, where the RR (R-peak to R-peak) in- tervals were constructed. Prior to the feature extraction, the RR intervals went through another processing stage with the aim of removing possible outliers and ectopic beats. Here, an outlier was defined as an interval length below 300 ms or above 2000 ms. Ectopic beats are defined as beat-to-beat intervals deviating from normal beat-to-beat intervals [29]. Outliers and ectopic beats were replaced with linearly interpolated values. Finally, the cleaned list of RR intervals, commonly referred to as NNI (Normal-to-Normal Interval) [30], were fed to the ECG feature extraction unit. In the following, the term NNI will be used.
+ECG Feature Extraction The ECG features were extracted from time-domain, frequency-domain, geometrical domain, and the non-linear domain. In total, 31 features were extracted from a sin- gle channel for every epoch. All extracted features are commonly found in the literature for seizure detection based on HRV analy- sis [22,27,29–31]. A short description of each feature can be seen in Table 2.
+Performance evaluation The machine learning method random forest was used for model development. Random forest is an en- semble of decision trees, where each tree is trained on a random subset with replacement of the original data set and randomly se- lected subset of features [35]. This way avoids a high correlation between the trees in the ensemble and therefore have more vari- ability. This method is robust to noise and outliers, resistant to over-fitting, fast, simple, and accurate compared to other meth- ods [36]. In this study, the Gini entropy was used as a measure of impurity in the different branches and 150 decision trees were trained in the forest. We evaluated the performance of ECG de- tector using leave-one-patient-out cross validation. The patient left out was tested with detector trained with the rest of the patients.
+3
+
+G.M. Sigsgaard and Y. Gu Neuroscience Informatics 4 (2024) 100152
+ Fig.2. Architecture of the ECG detector. fZ corresponds to the Zth feature and Yl where l=1...L number of epochs in the ECG recording. DECG is the decision outputted by the detector for that epoch.
+Fig. 3. Segmentation of the ECG signal into seizure (1) and non-seizure (0) epochs.
+ This process repeated until every patient has been tested. During model training, the data was imbalanced with most samples from non-seizure class. To address class imbalance, under-sampling of non-seizure samples was performed by randomly removing the non-seizure samples until a ration of 9:1 between non-seizure class and seizure class were met. The performance of the ECG detector was measured by the same performance metrics as EEG detector.
+2.2.3. EEG and ECG detector fusion
+There are two main approaches to integrate information from multiple modalities, namely the early integration and the late inte- gration. In early integration, extracted features from each modality are fused into one large feature vector which is then classified to output a final decision. In late integration, the classifier is trained with each modality, then the outputs of classifiers are fused into a final decision. In this study, two modalities were designed to work in the way that they are complementary to each other in the situ- ation where changes related to seizure are reflected from only one of these two signals. In addition, HRV changes and EEG changes associated with epileptic seizure don’t happen at the same time. Therefore, the late integration is a proper approach in this study. In
+addition, the work presented in [37] found late integration method is superior. To fuse two decisions from two modalities, Boolean operation of OR was chosen in order to maximize the sensitivity. Mathematically, the “OR” strategy can be expressed as:
+4
+DCombined =
+1 otherwise (1) 0 if DfEEG =DfECG =0
+
+Similar to uni-modal detectors, the performance of this multi- modal detector was evaluated according to previously mentioned metrics.
+
+
+3. Results
+Table 3 shows the performance of three detectors. The perfor- mance of EEG has been reported in [24] and is reused here for comparison. EEG detector achieved an average sensitivity of 81.43%, ECG detector sensitivity of 41.55%, multi-modal detector sensitivity of 87.62%. Compared to the EEG detector, ECG detector had a con- siderably lower sensitivity of 41.55%. The sensitivity of ECG varied greatly from patient to patient, with 6/14 and 4/14 having sensi- tivities of 0% and 100%, respectively. The sensitivity of multi-modal improved and is the best among three detectors. The specificity among three detectors was similar and showed good capability of
+G.M. Sigsgaard and Y. Gu
+Neuroscience Informatics 4 (2024) 100152
+Table 2
+Extracted features from ECG. Time feature
+mean_nni sd_nni
+sdsd
+rmssd median_nni nni_50 pnni_50 nni_20 pnni_20 range_nni cvsd
+cvnni mean_hr max_hr min_hr std_hr
+frequency feature
+total_power lf
+hf
+vlf lf_hf_ratio lfnu
+hfnu
+Geometrical feature triangular_index Non-linear
+        SD2
+SD1 ratio_sd2_sd1 CSI
+CVI
+Modified CSI
+Description
+Mean of all NNIs
+Standard deviation of all NNIs
+Standard deviation of differences between adjacent NNIs
+Square root of the mean of the sum of squares of differences between adjacent NNIs [32] Median absolute values of the difference between adjacent NNIs
+Number of adjacent NNIs differing by more than 50 ms
+Proportion of NNI_50 from all NNIs
+Number of adjacent NNIs differing by more than 20 ms
+Proportion of NNI_20 from all NNIs
+The difference between maximum and minimum NNI
+Coefficient of variation of successive differences equal to the rmssd divided by mean_nni [33] Coefficient of variation equal to the ratio of sdnn divided by mean_nni [33]
+Mean heart rate
+Max heart rate
+Min heart rate
+Standard deviation of heart rate
+Description
+Total power spectral density
+Low frequency (0.04 - 0.15 Hz) power of HRV [31]
+High frequency (0.15 - 0.40 Hz) power of HRV [31]
+Very low frequency (0.003 - 0.04 Hz) power of HRV [33] Ratio of high frequency, low frequency components Normalized low frequency power of HRV
+Normalized high frequency power of HRV
+Description
+This is the integral of the density distribution (number of all NNIs) divided by the maximum of the density distribution [32] Description
+This is defined as the standard deviation of the projection of the poincaré plot on the line of identity (y=x) [34]
+This is defined as the standard deviation of the projection of the poincaré plot on the line perpendicular to the line of identity [34] Ratio between SD2 and SD1
+Cardiosympathetic index
+Cardiovagal index
+A modified version of CSI
+detection performance for EEG detector, ECG detector, Multi-modal detector (NSD: no seizure detected).
+ Table 3
+Seizure PID
+PN00 PN01 PN03 PN05 PN06 PN07 PN09 PN10 PN11 PN12 PN13 PN14 PN16 PN17
+Sensitivity (%)
+EEG ECG multi-
+100 0 100 100 100 100 100 0 100 66.67 0 66.67 60 80 80 100 0 100 33 100 100 30 10 30 100 0 100 100 25 100 100 66.67 100 50 0 50 100 100 100 100 100 100
+Specificity (%)
+FP/h DL (sec)
+multi- EEG ECG multi- EEG ECG multi-
+99.95 0.31 0 0.31 32.8 NSD 32.8 99.57 0 2.6 2.6 10.5 34.5 10.5 99.5 1.86 1.16 2.97 22 NSD 22 98.01 7.46 4.64 11.77 14.5 NSD 14.5 98.56 0.66 7.88 8.55 22 28.2 22.2 97.01 16.03 1.83 17.86 9 NSD 9 97.79 0 13.02 13.02 41 37 35 99.41 0.7 2.83 3.48 12.3 3 8.3 98.67 7.03 0.83 7.86 6 NSD 6 98.05 2.95 8.52 11.48 12.5 46 12.5 99.73 1.15 0.46 1.62 20 57 20 98.47 6.86 1.32 7.97 18 NSD 18 99.02 5.32 0.41 5.73 38 44 38 99.97 0.19 0 0.19 21.5 42.5 21.5
+98.84 3.61 3.25 6.82 20 36.5 19.3
+that EEG detector had earlier seizure detection than ECG detector for patients PN00 and PN05.
+Fig. 5 illustrates the performance of the three detectors in terms of their sensitivity in relation to FP/h. The ROC-curves were ob- tained by using outputs’ probabilities and thresholds. Only thresh- olds yielding a maximum of 5 FP/h are shown. For each curve, three thresholds values have been highlighted where the values 0.56, 0.62, and 0.68 are depicted by the following markers; a square, a circle, and a star, respectively. It is obvious that EEG de- tector and multi-modal detector showed better performance than ECG detector. Between around 1 FP/h and 4 FP/h, multi-modal had a better sensitivity than EEG detector.
+     EEG
+99.95 100 99.69 98.75 99.89 97.32 100 99.88 98.82 99.5 99.81 98.69 99.1 99.97
+ECG
+100 99.57 99.81 99.21 98.67 99.61 97.79 99.52 99.86 98.55 99.92 99.75 99.93 100
+99.45
+ Mean 81.43
+41.55 87.62 99.38
+ detecting non-seizures. The ECG detector produced slightly fewer FP/h. EEG detector had similar DL to multi-modal. ECG detector had longer DL. Multi-modal detector managed to detect all seizures for 10 out of 14 patients. The poorest sensitivities belonged to the recordings from PN10 and PN14 with 30% and 50%, respectively.
+In Fig. 4, detections from each uni-modal detector were plot- ted together to visualize how each signal contributed to the final detection of multi-modal detector from a few patients. Improve- ments in sensitivity after fusing ECG signal with “OR” operation were especially seen for PN06 and PN09, where EEG detector failed to detect the seizure while ECG detector actually identified the seizure, as shown in the bottom row. In the top row, it is obvious
+5
+
+G.M. Sigsgaard and Y. Gu Neuroscience Informatics 4 (2024) 100152
+ Fig. 4. Seizure detections by both the ECG and EEG-based detector, 1: seizure, 0: no seizure. Actual: the actual seizure event period. ECG Predicted: seizure predictions made by the ECG-detector. EEG Predicted: seizure predictions made by the EEG-detector.
+ Fig. 5. Sensitivity in relation to FP/h for the three proposed detectors. 4. Discussion
+Around 50 million people worldwide are suffering from epilep- sy. Accurate seizure frequency is crucial for management of epilep- sy. However, seizure detection is currently based on visual inspec- tion of long-term and multi-channel EEG. It is time consuming and inefficient. With development of computing power and advanced data analytic, machine learning based approach has been applied to solve the complicated problems within healthcare [38–42]. Ma- chine learning would provide an efficient solution for automatic and accurate seizure detection. The objective of the study was to improve the performance of a patient non-specific seizure detec- tion by fusing information from both EEG and ECG. The developed multi-modal detector will assist the clinician for an efficient and objective evaluation of epilepsy.
+In our study, EEG detector, ECG detector and multi-modal de- tector were developed and evaluated with random forest using leave-one-patient-out cross validation. ECG detector was trained using seizures’ annotations based on reviewing patients’ EEG and clinical data. Features including time domain, frequency domain, geometrical domain and non-linear domain were extracted. Those rich features reflected the characteristics of EEG and ECG signal from different perspective, therefore have the potential to repre- sent the diverse characteristics and variation among patients. Each tree in random forest was trained with random subset of those extracted features to reduce over-fitting problem and increase di- versity. The result showed that the sensitivity of ECG detector was
+significantly lower than EEG detector and varied greatly among pa- tients. For 6 out 14 patients, no seizures were detected. It is not surprise because previous study has showed that not all patients had ECG changes and abnormalities during seizures [20]. Fig. 6 shows ECG signals from two patients during seizures: PN00 with- out ECG changes from top row; PN01 with ECG changes (tachycar- dia) at later stage of seizure from bottom row. It explained that no seizures were detected by ECG with PN00, while the seizures were detected by ECG for PN01. The DL of 36.5 seconds with ECG detec- tor reflected that HRV changes occur later in the seizure period as showed in Fig. 4. This is in line with several other studies where they also found interictal tachycardia (ITC) to be more an ictal than a pre-ictal phenomenon [43,44]. In comparison to the performance of other patient non-specific ECG seizure detectors, our ECG de- tector was outperformed in terms of both sensitivity and FP/h. The ECG-based detector presented in [21] achieved a sensitivity of 82.33% together with a FP/h of 1.71. In [22], they obtained sen- sitivities of 65%, 74%, and 52% with 1 FP/h when evaluated on the databases SeizeIT1, Epilepsiae-Freiburg, and Epilepsiae-Paris. There are several reasons why our ECG-detector failed to achieve com- parable sensitivity to the state of the art. First and foremost, there was a large variation in the size and seizure type representations in databases used for comparison. The database in [21] used 633 labeled seizure events which are more than 13 times the amount of available seizure events (47) in the Siene Scalp Database. Sim- ilarly, the detector in [22] was trained on the SeizeIT1 dataset which contained 221 seizures. Furthermore, both detectors were trained and evaluated on a variety of seizure types whereas our dataset contained 12 patients with IAS and one patient with FBTC and one patient with WIAS. A large variety of seizure types does- n’t necessarily lead to better performances, however, findings from papers researching HR and ECG changes in epilepsy suggest that tachycardia and ECG abnormalities are more common in patients with prolonged and generalized seizures [45,46]. No such seizure types were available in our data set. Secondly, QRS-detection is known to be a challenging task which is further hampered by the superimposed noise [26,47]. We used the Pan-Tompkins algorithm for QRS-detection which has been proven effective [26]. However, it sometimes made wrong detection of R-peak as illustrated in Fig. 7 or missed the R-peak detection, which lead to inaccurate calculation of HRV.
+6
+
+G.M. Sigsgaard and Y. Gu
+Neuroscience Informatics 4 (2024) 100152
+ Fig. 6. 5 seconds ECG signals. Top row for patient PN00. Bottom row for patient
+Fig. 7. ECG signal showing the first 10 seconds of patient PN05’s first seizure along with the detected R peaks (red dots) computed with the Pan-Tompkins algorithm.
+For training a robust model, we down-sampled the non-seizure epochs and over-sampled the seizure epochs to have a better bal- ance. Afterwards, during testing we would evaluate every 6 s seg- ment of EEG data and 60 s of ECG from unseen patients with the trained model to make a detection. Final detections will be based on post-processing procedure. Then we compared final detections with annotations to evaluate the performance of the model. The multi-modal detector achieved a sensitivity of 87.62% which was better than two uni-modal detectors. Despite a poor sensitivity obtained by the ECG-based detector, the combined did manage to correctly detect more seizures. Improvements in sensitivity are especially seen for PN06 and PN09 where the ECG detector outper- formed the EEG detector. It indicates the benefit of using multiple modalities. For patients with no evident epileptic EEG pattern may instead have measurable ECG changes during seizure. In this sce- nario, ECG detector will detect more seizures, leading to improve- ment of the sensitivity. DL of multi-modal detector have an average gain of only 0.7 second. Our study focused on improving sensitivity at the cost of false detections. The diagnosis of epilepsy depends on seizure frequency. We would like to detect as many seizures
+PN01. Left: beginning of first seizure event. Right: 30 seconds into first seizure event.
+as possible. With our multi-model, the sensitivity increased by around 6% and FPs/h increased by 3.2 FPs/h. When epilepsy experts review the detections done by trained model, we assume that can they easily identify those false positives.
+The “OR” fusion strategy increased sensitivity, but it also in- herited the false detections produced by each detector. A clear example of this can be seen in the top right plot of Fig. 4. Our purpose of multi-modal detector is to aid the neurologist for an efficient and objective assessment of epilepsy, so higher sensitivity must be favored over a low FP/h and DL as an experienced clini- cian, with relative ease, would be able to reject a FP [43]. It is thus also difficult to determine what the upper limit of an acceptable number of FP/h might be. Further investigations are needed for finding the optimal fusion strategy. Another approach to limit the number of false detections, could be to change the threshold/prob- ability value for making a decision of seizure or non-seizure. The performance reported here using the value of 0.5 as threshold. By increasing this, one might be able to reduce the false detections as showed in Fig. 5. For the multi-modal detector, it seems that a threshold value between 0.62-0.68 could decrease the number of FP/h to about 1.5 whilst maintaining a sensitivity of above 80%. Greene et al. [21] developed patient non-specific model with both EEG and ECG and scored a sensitivity of 81.44% and 3.15 FP/h. Our multi-modal detector achieved the better performance than theirs.
+Lastly, the multi-modal detector was evaluated on a subset of patients where the recordings from PN10 and PN14 had been re- moved for testing. These two patients had different seizure types from all other patients, due to the leave-one-patient-out cross validation scheme, no training data had been available of those two patients. This could justify why all three detectors, gener- ally, showed the lowest sensitivities for these two patients. The result showed that the sensitivity increased from the 87.62% to 95.56%, with similar DL, FP/h, and specificity. This further empha- sizes that more seizure cases and a greater variety of seizure types are needed for the detector to generalize better.
+Future investigation should focus on reducing false detections while keeping high sensitivity. It could be achieved as follows. First and foremost, the detectors will be trained with an increased amount of seizure data with different seizure types including WIAS, FBTC, IAS, and unclassified seizures. The trained detectors are expected to result in an increased performance, especially for
+ 7
+
+G.M. Sigsgaard and Y. Gu
+Neuroscience Informatics 4 (2024) 100152
+the patients PN10 and PN14. Secondly, as the sensitivity of the ECG detector was low, an improvement of ECG detector here would most likely also provide the greatest value to the multi-modal de- tector. For the ECG-detector, the feature extraction is based on the HRV analysis where an accurate R-peak detection is impor- tant. R-peak detection is usually challenging especially when ECG signal is contaminated by noises. In next step, noise cancellation or correction on ECG will be developed for better R-peak detec- tion. As the main contribution, the paper proposed an efficient and robust algorithm based on random forest and rich features from EEG and ECG. The study presented the benefit of using multi- ple modalities for patient non-specific seizure detection. Our algo- rithm demonstrated an improvement over the state-of-the-art non- specific methods in terms of sensitivity. The developed method will be further validated with big database and integrated for clin- ical validation.
+5. Conclusion
+In this study, the aim was to improve the sensitivity of a pa- tient non-specific seizure detector by combining information from both EEG and ECG. EEG detector, ECG detector and multi-modal detector have been developed and compared. Generally, the EEG- based detector outperformed the ECG-based in terms of sensitiv- ity. Although, for a few patients where the EEG-detector failed to achieve high sensitivities, the ECG-detector actually performed better and detected more seizures. This was also reflected in the sensitivity of the multi-modal detector which was higher (87.62%) than the proposed EEG detector and ECG detector. Additionally, the multi-modal detector achieved a higher sensitivity than state- of-the-art non-specific seizure detectors. Our findings showed that information from the ECG signal is beneficial and complementary for an automatic, patient non-specific seizure detection. However, the multi-modal detector did suffer from a relatively high number of FP/h as it inherited FPs from both signals. Thus, further inves- tigations are needed to limit the number of false positives whilst still maintaining high sensitivities before clinical deployment.
