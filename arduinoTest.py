@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy.signal import find_peaks
 from scipy.fftpack import fft
-import pickle
+# import pickle
 
 # Serial port configuration
 EEG_SERIAL_PORT = '/dev/cu.usbserial-0001'  # Update as necessary
@@ -19,9 +19,9 @@ BAUD_RATE = 115200
 THINGSBOARD_SERVER = "thingsboard.cloud"
 ACCESS_TOKEN = "1b0h822630kzcoygsqsw"
 
-# Load the trained seizure detection model
-with open('ML Algos/seizure_model.pkl', 'rb') as model_file:
-    seizure_model = pickle.load(model_file)
+# # Load the trained seizure detection model
+# with open('ML Algos/seizure_model.pkl', 'rb') as model_file:
+#     seizure_model = pickle.load(model_file)
 
 # MQTT client setup
 client = mqtt.Client()
@@ -44,7 +44,6 @@ bpm_values = []
 # Initialize time for BPM update
 last_update_time = time.time()
 
-# Lock for thread-safe operations
 lock = threading.Lock()
 
 # Function to calculate FFT of the EEG signal
@@ -62,7 +61,7 @@ def get_peak(ecg_signal):
 def calculate_bpm(peaks):
     sample_rate=125
     if len(peaks) < 2:
-        return 0  # Return 0 if there are fewer than 2 peaks
+        return 0
     intervals = np.diff(peaks) / sample_rate
     avg_interval = np.mean(intervals)
     bpm = 60 / avg_interval
@@ -79,7 +78,6 @@ def calculate_bpm(peaks):
 #         features = np.append(features, [0] * (129 - len(features)))
 #     elif len(features) > 129:
 #         features = features[:129]
-
 #     features = features.reshape(1, -1)
 #     seizure_prediction = seizure_model.predict(features)
 #     return seizure_prediction
@@ -115,10 +113,12 @@ def read_ecg_data():
                     ecg_signal.append(signal)
                     if len(ecg_signal) > ECG_BUFFER_SIZE:
                         ecg_signal.pop(0)
+
                     # Calculate BPM
                     peaks = get_peak(ecg_signal)
                     bpm = calculate_bpm(peaks)
                     bpm_values.append(bpm)
+
                     # Calculate average BPM over the specified window
                     window_size = int(10 * ECG_SAMPLE_RATE)
                     if len(bpm_values) > window_size:
@@ -148,13 +148,9 @@ ax2.set_ylabel('Amplitude')
 ax3.set_title('ECG Signal')
 ax3.set_xlabel('Time (s)')
 ax3.set_ylabel('Amplitude')
-
-# Hide Y axes label marks
 ax1.yaxis.set_tick_params(labelleft=False)
 ax2.yaxis.set_tick_params(labelleft=False)
 ax3.yaxis.set_tick_params(labelleft=False)
-
-# Hide Y axes tick marks
 ax1.set_yticks([])
 ax2.set_yticks([])
 ax3.set_yticks([])
@@ -169,9 +165,9 @@ def init():
 # Function to update the plot with new data
 def update(frame):
     global eeg_signal, ecg_signal
-
     with lock:
         if len(eeg_signal) == EEG_BUFFER_SIZE:
+
             # Update the time-domain plot for EEG
             x_data_eeg = np.linspace(0, EEG_BUFFER_SIZE / EEG_SAMPLE_RATE, EEG_BUFFER_SIZE)
             line1.set_data(x_data_eeg, eeg_signal)
@@ -191,11 +187,11 @@ def update(frame):
             #     client.publish('v1/devices/me/telemetry', json.dumps({"seizure": False}))
 
         if len(ecg_signal) >= ECG_BUFFER_SIZE:
+
             # Update the time-domain plot for ECG
             x_data_ecg = np.linspace(0, len(ecg_signal) / ECG_SAMPLE_RATE, len(ecg_signal))
             line3.set_data(x_data_ecg, ecg_signal)
             ax3.set_ylim(min(ecg_signal), max(ecg_signal))  # Dynamic y-axis for ECG
-    
     return line1, line2, line3
 
 # Initialize animation
